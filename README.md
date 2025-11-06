@@ -1,424 +1,283 @@
-# Buck-Boost Converter MATLAB/Simulink Simulation
+# StarVault - Stellar DeFi Vault
 
-Complete implementation and analysis of a buck-boost DC-DC converter using MATLAB and Simulink.
+A decentralized yield-generating vault built on the Stellar blockchain using Soroban smart contracts. Users can deposit XLM and earn yield automatically through the vault's APY mechanism.
 
-## Overview
+## 🌟 Features
 
-This project provides a comprehensive buck-boost converter simulation with:
-- Automatic design calculations
-- Programmatic Simulink model generation
-- Detailed results analysis and visualization
-- Performance comparison with theoretical values
+- **Secure Smart Contracts**: Built with Rust and Soroban for maximum security
+- **Yield Generation**: Automatic APY-based yield accrual
+- **Instant Deposits/Withdrawals**: No lock-up period required
+- **Modern UI**: Beautiful React interface with TailwindCSS
+- **Wallet Integration**: Seamless connection with Freighter and other Stellar wallets
+- **Real-time Updates**: Live balance and vault statistics
 
-## Design Specifications
-
-| Parameter | Value |
-|-----------|-------|
-| Input Voltage | 24 V |
-| Output Voltage | -12 V (inverting) |
-| Output Power | 50 W |
-| Switching Frequency | 40 kHz |
-| Duty Cycle | 33.33% |
-| Load Resistance | 2.88 Ω |
-
-## Component Values
-
-| Component | Value |
-|-----------|-------|
-| Inductor (L) | 320 μH |
-| Output Capacitor (C) | 330 μF |
-| MOSFET Ron | 0.01 Ω |
-| Diode Forward Voltage | 0.5 V |
-| ESR (Capacitor) | 0.01 Ω |
-
-## Prerequisites
-
-- MATLAB R2017a or later
-- Simulink
-- Simscape Electrical (formerly SimPowerSystems)
-- Control System Toolbox (optional, for advanced features)
-
-## Quick Start
-
-### Option 1: Automated Setup (Recommended)
-
-```matlab
-% Run complete workflow
-design_calculations        % Calculate all parameters
-create_buck_boost_model   % Create Simulink model
-% Manually complete power connections in Simulink GUI
-sim('BuckBoost_Converter')  % Run simulation
-analyze_results           % Analyze and plot results
-```
-
-### Option 2: Manual Simulink Build
-
-1. Follow the detailed instructions in `IMPLEMENTATION_GUIDE.md`
-2. Use component values from design calculations
-3. Build circuit step-by-step using Simulink blocks
-
-### Option 3: Simplified State-Space Model
-
-```matlab
-design_calculations       % Generate parameters
-buck_boost_simulation     % Run averaged model (no Simulink GUI needed)
-```
-
-## File Structure
+## 📁 Project Structure
 
 ```
-buck-boost-simulation/
-├── README.md                          # This file
-├── IMPLEMENTATION_GUIDE.md            # Detailed implementation guide
-├── design_calculations.m              # Design parameter calculations
-├── create_buck_boost_model.m          # Automated model generator
-├── analyze_results.m                  # Results analysis script
-├── buck_boost_simulation.m            # Averaged model (generated)
-├── BuckBoost_Converter.slx            # Simulink model (generated)
-├── buck_boost_parameters.mat          # Design parameters (generated)
-└── results/                           # Generated results (optional)
-    ├── simulation_results.txt
-    ├── buck_boost_overview.png
-    ├── buck_boost_performance.png
-    └── results_table.tex
+.
+├── contracts/
+│   └── vault/
+│       ├── src/
+│       │   └── lib.rs           # Main vault smart contract
+│       └── Cargo.toml            # Rust dependencies
+│
+└── frontend/
+    ├── src/
+    │   ├── components/
+    │   │   ├── VaultDashboard.tsx    # Main dashboard component
+    │   │   ├── VaultCard.tsx         # Vault stats card
+    │   │   ├── DepositModal.tsx      # Deposit interface
+    │   │   └── WithdrawModal.tsx     # Withdrawal interface
+    │   ├── utils/
+    │   │   └── stellar.ts            # Stellar SDK integration
+    │   ├── App.tsx                   # Main app component
+    │   ├── main.tsx                  # Entry point
+    │   └── index.css                 # Global styles
+    ├── package.json
+    ├── vite.config.ts
+    ├── tailwind.config.js
+    └── tsconfig.json
 ```
 
-## Detailed Usage
+## 🚀 Quick Start
 
-### Step 1: Design Calculations
+### Prerequisites
 
-```matlab
-design_calculations
+- Node.js (v18+)
+- Rust and Cargo
+- Stellar CLI (`stellar-cli`)
+- Freighter Wallet browser extension
+
+### 1. Install Dependencies
+
+#### Frontend
+```bash
+cd frontend
+npm install
 ```
 
-This script:
-- Calculates duty cycle from voltage specifications
-- Designs inductor and capacitor values
-- Determines component ratings (voltage, current)
-- Estimates losses and efficiency
-- Checks for continuous conduction mode (CCM)
-- Saves parameters to `buck_boost_parameters.mat`
-
-**Output:**
-```
-BUCK-BOOST CONVERTER DESIGN CALCULATIONS
-============================================
-
-OPERATING POINT:
-  Duty Cycle (D): 0.3333 (33.33%)
-  Load Resistance: 2.88 Ohm
-  Output Current: 4.167 A
-  Average Inductor Current: 6.250 A
-  ...
+#### Smart Contract
+```bash
+cd contracts/vault
+cargo build --target wasm32-unknown-unknown --release
 ```
 
-### Step 2: Create Simulink Model
+### 2. Deploy Smart Contract
 
-```matlab
-create_buck_boost_model
+First, make sure you have the Stellar CLI installed:
+```bash
+cargo install --locked stellar-cli --features opt
 ```
 
-This script:
-- Loads design parameters
-- Creates new Simulink model programmatically
-- Adds all power components (source, MOSFET, diode, inductor, capacitor, load)
-- Adds control (PWM generator)
-- Adds measurement and display blocks
-- Configures solver settings
-- Saves model as `BuckBoost_Converter.slx`
-
-**Note:** Power circuit connections require manual completion in Simulink GUI due to the complexity of electrical connections. Follow the printed instructions.
-
-### Step 3: Complete Manual Connections
-
-Open the model in Simulink:
-```matlab
-open_system('BuckBoost_Converter')
+Build the contract:
+```bash
+cd contracts/vault
+stellar contract build
 ```
 
-Complete the power circuit connections as shown in the console output:
+Deploy to testnet:
+```bash
+# Set your identity (use the provided test credentials)
+stellar keys generate deployer --network testnet
 
-```
-1. DC Source (+) -> Inductor port 1
-2. Inductor port 2 -> Switching Node (create junction)
-3. Switching Node -> MOSFET Drain (D)
-4. Switching Node -> Diode Cathode (K)
-5. MOSFET Source (S) -> Ground
-...
-```
+# Deploy the vault contract
+stellar contract deploy \
+  --wasm target/wasm32-unknown-unknown/release/vault_contract.wasm \
+  --source deployer \
+  --network testnet
 
-### Step 4: Run Simulation
-
-In Simulink GUI:
-- Click the **Run** button (▶)
-- Wait for simulation to complete (10-30 seconds)
-- View waveforms in Scope blocks
-
-Or from MATLAB command window:
-```matlab
-sim('BuckBoost_Converter')
+# Save the contract ID that's returned
 ```
 
-### Step 5: Analyze Results
-
-```matlab
-analyze_results
+Initialize the vault:
+```bash
+stellar contract invoke \
+  --id <YOUR_VAULT_CONTRACT_ID> \
+  --source deployer \
+  --network testnet \
+  -- \
+  initialize \
+  --admin <YOUR_ADMIN_ADDRESS> \
+  --token CDLZFC3SYJYDZT7K67VZ75HPJVIEUVNIXF47ZG2FB2RMQQVU2HHGCYSC \
+  --apy 500
 ```
 
-This script:
-- Extracts simulation data from workspace
-- Calculates steady-state values
-- Analyzes ripple performance
-- Performs FFT frequency analysis
-- Compares with theoretical predictions
-- Generates comprehensive plots
-- Saves results to text files and images
+### 3. Configure Frontend
 
-**Output Files:**
-- `simulation_results.txt` - Detailed text summary
-- `buck_boost_overview.png` - Main waveforms
-- `buck_boost_performance.png` - Performance metrics
-- `results_table.tex` - LaTeX table for reports
-
-## Expected Results
-
-### Output Voltage
-- **Average:** -12.0 V
-- **Ripple:** < 120 mV peak-to-peak (< 1%)
-- **Settling Time:** 3-5 ms
-- **Waveform:** DC level with small triangular ripple at 40 kHz
-
-### Inductor Current
-- **Average:** 6.25 A
-- **Ripple:** ~0.625 A peak-to-peak (~10%)
-- **Peak:** ~6.56 A
-- **Minimum:** ~5.94 A (always > 0 for CCM)
-- **Waveform:** Triangular ripple on DC level
-
-### Efficiency
-- **Expected:** 92-95%
-- **Losses:** Switch, diode, inductor, capacitor ESR
-
-### Gate Signal
-- **Frequency:** 40 kHz
-- **Duty Cycle:** 33.33%
-- **ON Time:** 8.33 μs
-- **OFF Time:** 16.67 μs
-
-## Modifying Parameters
-
-### Change Output Voltage
-
-Edit `design_calculations.m`:
-```matlab
-Vout = -16;  % For -16V output
+Create a `.env` file in the `frontend` directory:
+```bash
+cd frontend
+cp .env.example .env
 ```
 
-The script automatically recalculates duty cycle and component values.
-
-### Change Output Power
-
-Edit `design_calculations.m`:
-```matlab
-Pout = 100;  % For 100W output
+Edit `.env` and add your deployed contract ID:
+```
+VITE_VAULT_CONTRACT_ID=<YOUR_VAULT_CONTRACT_ID>
+VITE_TOKEN_CONTRACT_ID=CDLZFC3SYJYDZT7K67VZ75HPJVIEUVNIXF47ZG2FB2RMQQVU2HHGCYSC
 ```
 
-Load resistance is automatically recalculated.
+### 4. Run the Frontend
 
-### Change Switching Frequency
-
-Edit `design_calculations.m`:
-```matlab
-fs = 100000;  % For 100 kHz switching
+```bash
+cd frontend
+npm run dev
 ```
 
-Component values are recalculated to maintain ripple specifications.
+The app will be available at `http://localhost:3000`
 
-## Troubleshooting
+## 💡 Smart Contract Functions
 
-### Simulation Runs Slowly
-**Solution:**
-- Increase minimum step size in solver settings
-- Use averaged model (`buck_boost_simulation.m`)
-- Reduce simulation time
+### User Functions
 
-### Voltage/Current Incorrect
-**Solution:**
-- Verify all power connections in Simulink
-- Check PWM signal is connected to MOSFET gate
-- Verify component polarities (especially diode)
-- Ensure all grounds are connected
+- **`deposit(user: Address, amount: i128)`**
+  - Deposits XLM into the vault
+  - Starts earning yield immediately
+  - Emits `deposit` event
 
-### Model Won't Run
-**Solution:**
-- Verify Simscape Electrical toolbox is installed
-- Check for missing connections
-- Add `powergui` block if missing
-- Verify solver settings (use `ode23tb` or `ode15s`)
+- **`withdraw(user: Address, amount: i128)`**
+  - Withdraws XLM from the vault
+  - No lock-up period
+  - Emits `withdraw` event
 
-### Oscillations or Instability
-**Solution:**
-- Add snubber circuits across switch and diode
-- Reduce capacitor ESR
-- Check for floating nodes
-- Adjust solver tolerances
+- **`get_balance(user: Address) -> i128`**
+  - Returns user's deposited balance
+  - Balance includes accrued yield
 
-## Advanced Features
+- **`get_vault_info() -> VaultInfo`**
+  - Returns total deposits and current APY
 
-### Closed-Loop Control
+### Admin Functions
 
-Add voltage feedback and PI controller for regulated output:
+- **`initialize(admin: Address, token: Address, apy: i128)`**
+  - Initializes the vault contract
+  - Sets admin, token, and initial APY
+  - Can only be called once
 
-```matlab
-% In Simulink model:
-% 1. Add voltage measurement and feedback
-% 2. Add reference voltage (Vref = -12)
-% 3. Add Sum block (error = Vref - Vmeasured)
-% 4. Add PID Controller (Kp = 0.1, Ki = 100, Kd = 0)
-% 5. Connect controller output to PWM modulator
+- **`accrue_yield()`**
+  - Accrues yield to all depositors
+  - Called periodically by admin/keeper
+  - Calculates yield based on APY and time elapsed
+
+- **`update_apy(new_apy: i128)`**
+  - Updates the vault's APY
+  - Admin only
+  - APY in basis points (500 = 5%)
+
+## 🎨 Frontend Components
+
+### VaultDashboard
+Main component that orchestrates the entire UI. Handles wallet connection, balance updates, and modal states.
+
+### VaultCard
+Displays vault statistics including:
+- User's deposited balance
+- Current APY
+- Total value locked (TVL)
+
+### DepositModal
+Modal interface for depositing XLM:
+- Input validation
+- Max balance button
+- Real-time balance display
+- Error handling
+
+### WithdrawModal
+Modal interface for withdrawing XLM:
+- Input validation
+- Max withdrawal amount
+- Confirmation flow
+
+## 🔧 Development
+
+### Build Contract
+```bash
+cd contracts/vault
+stellar contract build
 ```
 
-### Discontinuous Conduction Mode (DCM)
-
-To observe DCM operation:
-```matlab
-% In design_calculations.m
-L_standard = 1000e-6;  % Increase inductance to 1000 μH
-Rload = 10;            % Reduce load (increase resistance)
+### Run Tests
+```bash
+cd contracts/vault
+cargo test
 ```
 
-### Parametric Sweep
-
-Test multiple duty cycles:
-```matlab
-D_values = 0.2:0.05:0.6;
-Vout_results = zeros(size(D_values));
-
-for i = 1:length(D_values)
-    % Update duty cycle
-    set_param('BuckBoost_Converter/PWM_Generator', ...
-              'PulseWidth', num2str(D_values(i)*100));
-    % Run simulation
-    sim('BuckBoost_Converter');
-    % Extract result
-    Vout_results(i) = mean(Vout_data.Data(end-1000:end));
-end
-
-plot(D_values, Vout_results);
-xlabel('Duty Cycle'); ylabel('Output Voltage (V)');
+### Frontend Development
+```bash
+cd frontend
+npm run dev        # Start dev server
+npm run build      # Build for production
+npm run preview    # Preview production build
 ```
 
-## Theory
+## 📝 Environment Variables
 
-### Buck-Boost Converter Operation
+The project uses the following test credentials (already configured):
 
-The buck-boost converter is an inverting DC-DC converter that can:
-- **Buck Mode:** D < 0.5, |Vout| < Vin
-- **Boost Mode:** D > 0.5, |Vout| > Vin
-- **Unity Gain:** D = 0.5, |Vout| = Vin
+- **STELLAR_SECRET_PHRASE**: Test account secret phrase
+- **STELLAR_PUBLIC_KEY**: Test account public key (has 10,000 XLM on testnet)
 
-### Key Equations
+These are automatically available in the environment and can be used for deployment and testing.
 
-**Voltage Conversion:**
-```
-Vout = -Vin × D / (1 - D)
-```
+## 🔒 Security Considerations
 
-**Duty Cycle:**
-```
-D = |Vout| / (Vin + |Vout|)
-```
+1. **Smart Contract Auditing**: Before mainnet deployment, have the contract professionally audited
+2. **Access Control**: Admin functions are protected with `require_auth()`
+3. **Input Validation**: All user inputs are validated in both contract and frontend
+4. **Rate Limiting**: Consider implementing rate limits for production
+5. **Yield Mechanism**: Current yield is simulated - integrate with actual DeFi protocols for production
 
-**Inductor Current (Average):**
-```
-IL_avg = |Vout| / [Rload × (1 - D)]
-```
+## 🚢 Deployment Checklist
 
-**Inductor Design:**
-```
-L = (Vin × D) / (ΔIL × fs)
-```
+- [ ] Deploy and verify smart contract on testnet
+- [ ] Initialize vault with proper parameters
+- [ ] Test all contract functions
+- [ ] Configure frontend environment variables
+- [ ] Test wallet connection (Freighter)
+- [ ] Test deposit flow
+- [ ] Test withdrawal flow
+- [ ] Verify balance updates
+- [ ] Check error handling
+- [ ] Deploy frontend to hosting service (Vercel, Netlify, etc.)
 
-**Capacitor Design:**
-```
-C = (Iout × D) / (ΔVout × fs)
-```
+## 📚 Resources
 
-**CCM/DCM Boundary:**
-```
-Lcrit = (Vin × D × (1-D)² × Rload) / (2 × fs × Pout / Vout²)
-```
+- [Stellar Documentation](https://developers.stellar.org/)
+- [Soroban Documentation](https://soroban.stellar.org/docs)
+- [Stellar Wallets Kit](https://github.com/Creit-Tech/Stellar-Wallets-Kit)
+- [Stellar SDK](https://stellar.github.io/js-stellar-sdk/)
 
-### Conduction Modes
+## 🤝 Contributing
 
-**Continuous Conduction Mode (CCM):**
-- Inductor current never reaches zero
-- Occurs when L > Lcrit or light loads
-- More predictable behavior
+Contributions are welcome! Please feel free to submit a Pull Request.
 
-**Discontinuous Conduction Mode (DCM):**
-- Inductor current reaches zero during switching cycle
-- Occurs when L < Lcrit or heavy loads
-- Output voltage depends on load
+## 📄 License
 
-## Performance Metrics
+MIT License - see LICENSE file for details
 
-### Efficiency Factors
+## 🎯 Hackathon Submission
 
-**Losses:**
-1. **Switch Conduction:** I²L_rms × Ron × D
-2. **Switch Switching:** Esw × fs
-3. **Diode Conduction:** Vf × Iout + I²L_rms × Rf × (1-D)
-4. **Inductor:** I²L_rms × RL
-5. **Capacitor ESR:** I²ripple × ESR
+This project was built for the Stellar blockchain hackathon. It demonstrates:
+- Soroban smart contract development
+- Stellar wallet integration
+- Modern frontend development with React
+- DeFi vault mechanics
+- Real-world use case for yield generation
 
-**Typical Efficiency:** 90-95% at rated load
+## 🐛 Known Issues & Future Improvements
 
-### Design Tradeoffs
+- [ ] Implement actual yield generation mechanism (integrate with lending protocols)
+- [ ] Add multi-asset support
+- [ ] Implement automatic yield compounding
+- [ ] Add transaction history
+- [ ] Implement governance for APY adjustments
+- [ ] Add analytics dashboard
+- [ ] Mobile responsive optimizations
+- [ ] Add deposit/withdrawal limits
 
-| Increase | Effect |
-|----------|--------|
-| Inductance | ↓ Current ripple, ↑ Size, ↑ Cost, ↑ DCM threshold |
-| Capacitance | ↓ Voltage ripple, ↑ Size, ↑ Cost |
-| Switching Freq | ↓ Component size, ↑ Switching loss, ↑ EMI |
-| Duty Cycle | ↑ Output voltage (mag), ↑ Current stress |
+## 💬 Support
 
-## References
+For issues, questions, or contributions, please open an issue on GitHub.
 
-1. Erickson, R. W., & Maksimović, D. (2001). *Fundamentals of Power Electronics*. Springer.
-2. Mohan, N., Undeland, T. M., & Robbins, W. P. (2003). *Power Electronics: Converters, Applications, and Design*. Wiley.
-3. MathWorks. (2023). *Simscape Electrical Documentation*.
+---
 
-## Project Submission Checklist
-
-- [ ] Complete Simulink model (`.slx` file)
-- [ ] Circuit diagram (screenshot or Simulink export)
-- [ ] Design calculations (documented code output)
-- [ ] Simulation results (waveform screenshots)
-- [ ] Performance analysis (comparison with theory)
-- [ ] Discussion of results
-- [ ] Component specifications table
-- [ ] MATLAB scripts (`.m` files)
-- [ ] Project report (PDF/Word)
-- [ ] References cited
-
-## License
-
-This project is provided as educational material for power electronics courses.
-
-## Author
-
-Auto-generated Buck-Boost Converter Simulation Suite
-Created: November 2025
-
-## Support
-
-For issues or questions:
-1. Review the `IMPLEMENTATION_GUIDE.md`
-2. Check MATLAB/Simulink documentation
-3. Verify toolbox installation
-4. Check component connections in model
-
-## Acknowledgments
-
-Based on standard buck-boost converter design principles and MATLAB/Simulink best practices.
+Built with ❤️ for the Stellar ecosystem

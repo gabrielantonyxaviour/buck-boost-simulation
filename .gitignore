@@ -1,0 +1,24 @@
+# Rust/Cargo
+target/
+**/*.rs.bk
+Cargo.lock
+
+# Node/Frontend
+node_modules/
+dist/
+.env
+.env.local
+
+# Editor
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# MATLAB (existing files)
+*.asv
+*.m~

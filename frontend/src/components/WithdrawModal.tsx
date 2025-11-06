@@ -1,0 +1,144 @@
+import React, { useState } from 'react';
+import { X, ArrowUpCircle, AlertCircle } from 'lucide-react';
+
+interface WithdrawModalProps {
+  isOpen: boolean;
+  onClose: () => void;
+  onWithdraw: (amount: string) => Promise<void>;
+  maxBalance: string;
+  isLoading?: boolean;
+}
+
+const WithdrawModal: React.FC<WithdrawModalProps> = ({
+  isOpen,
+  onClose,
+  onWithdraw,
+  maxBalance,
+  isLoading = false,
+}) => {
+  const [amount, setAmount] = useState('');
+  const [error, setError] = useState('');
+
+  if (!isOpen) return null;
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setError('');
+
+    const amountNum = parseFloat(amount);
+    const maxNum = parseFloat(maxBalance);
+
+    if (isNaN(amountNum) || amountNum <= 0) {
+      setError('Please enter a valid amount');
+      return;
+    }
+
+    if (amountNum > maxNum) {
+      setError(`Insufficient balance. Max: ${maxBalance} XLM`);
+      return;
+    }
+
+    try {
+      await onWithdraw(amount);
+      setAmount('');
+      onClose();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Withdrawal failed');
+    }
+  };
+
+  const handleMaxClick = () => {
+    setAmount(maxBalance);
+    setError('');
+  };
+
+  return (
+    <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+      <div className="bg-white rounded-2xl shadow-2xl max-w-md w-full p-6 relative">
+        {/* Close button */}
+        <button
+          onClick={onClose}
+          className="absolute top-4 right-4 text-gray-400 hover:text-gray-600 transition-colors"
+          disabled={isLoading}
+        >
+          <X className="w-6 h-6" />
+        </button>
+
+        {/* Header */}
+        <div className="flex items-center gap-3 mb-6">
+          <div className="bg-orange-100 p-3 rounded-xl">
+            <ArrowUpCircle className="w-6 h-6 text-orange-600" />
+          </div>
+          <h2 className="text-2xl font-bold text-gray-900">Withdraw XLM</h2>
+        </div>
+
+        {/* Form */}
+        <form onSubmit={handleSubmit} className="space-y-4">
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              Amount
+            </label>
+            <div className="relative">
+              <input
+                type="number"
+                step="0.000001"
+                value={amount}
+                onChange={(e) => {
+                  setAmount(e.target.value);
+                  setError('');
+                }}
+                placeholder="0.00"
+                className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-orange-500 focus:border-transparent outline-none transition-all"
+                disabled={isLoading}
+              />
+              <button
+                type="button"
+                onClick={handleMaxClick}
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-orange-600 font-semibold text-sm hover:text-orange-700 transition-colors"
+                disabled={isLoading}
+              >
+                MAX
+              </button>
+            </div>
+            <p className="text-sm text-gray-500 mt-1">
+              Deposited: {maxBalance} XLM
+            </p>
+          </div>
+
+          {/* Error message */}
+          {error && (
+            <div className="flex items-center gap-2 p-3 bg-red-50 border border-red-200 rounded-lg">
+              <AlertCircle className="w-5 h-5 text-red-600 flex-shrink-0" />
+              <p className="text-sm text-red-600">{error}</p>
+            </div>
+          )}
+
+          {/* Submit button */}
+          <button
+            type="submit"
+            disabled={isLoading || !amount}
+            className="w-full bg-orange-600 text-white py-3 rounded-xl font-semibold hover:bg-orange-700 transition-colors disabled:bg-gray-300 disabled:cursor-not-allowed"
+          >
+            {isLoading ? (
+              <span className="flex items-center justify-center gap-2">
+                <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                Processing...
+              </span>
+            ) : (
+              'Withdraw'
+            )}
+          </button>
+        </form>
+
+        {/* Info */}
+        <div className="mt-6 p-4 bg-orange-50 rounded-xl">
+          <p className="text-sm text-orange-900">
+            Your XLM will be withdrawn from the vault and transferred to your wallet.
+          </p>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+export default WithdrawModal;
